@@ -1,0 +1,137 @@
+{
+    'name': 'Dokumentų Valdymo Modulis',
+    'version': '1.0',
+    'category': 'Tools',
+    'depends': ['base'],
+    'data': [
+        'views/document_view.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+}
+
+from . import models
+
+from . import document
+
+from odoo import models, fields
+
+class Document(models.Model):
+    _name = 'my_module.document'
+    _description = 'Dokumentų Valdymas'
+
+    name = fields.Char(string='Pavadinimas', required=True)
+    description = fields.Text(string='Aprašymas')
+    company_id = fields.Many2one('res.company', string='Įmonė', required=True)
+
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_document_form" model="ir.ui.view">
+            <field name="name">my_module.document.form</field>
+            <field name="model">my_module.document</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="name"/>
+                        <field name="description"/>
+                        <field name="company_id"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
+
+{
+    'name': 'Dokumentų Valdymo Modulis',
+    'version': '1.0',
+    'category': 'Tools',
+    'depends': ['base'],
+    'data': [
+        'views/document_view.xml',
+        'views/menu.xml',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+}
+
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Meniu įrašas -->
+        <record id="menu_document" model="ir.ui.menu">
+            <field name="name">Dokumentai</field>
+            <field name="sequence" eval="10"/>
+            <field name="action" ref="my_module.menu_action_document"/>
+        </record>
+
+        <!-- Meniu veiksmo įrašas -->
+        <record id="menu_action_document" model="ir.actions.act_window">
+            <field name="name">Dokumentų Medis</field>
+            <field name="res_model">my_module.document</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>
+from . import models
+from . import views
+from odoo import models, fields, api
+
+class DocumentReportWizard(models.TransientModel):
+    _name = 'my_module.document_report_wizard'
+    _description = 'Wizard for Document Report'
+
+    date_from = fields.Date(string='Data nuo', required=True)
+    date_to = fields.Date(string='Data iki', required=True)
+
+    @api.multi
+    def print_report(self):
+        data = {
+            'date_from': self.date_from,
+            'date_to': self.date_to,
+        }
+        return self.env.ref('my_module.action_report_document').report_action(self, data=data)
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_document_report_wizard_form" model="ir.ui.view">
+        <field name="name">my_module.document_report_wizard.form</field>
+        <field name="model">my_module.document_report_wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <footer>
+                    <button string="Spausdinti ataskaitą" type="object" class="oe_highlight" name="print_report"/>
+                    <button string="Uždaryti" class="oe_link" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_document" model="ir.actions.report">
+        <field name="name">Dokumentų ataskaita</field>
+        <field name="model">my_module.document</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">my_module.report_document</field>
+        <field name="binding_model_id" ref="my_module.model_document"/>
+    </record>
+</odoo>
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_document">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="doc">
+                    <t t-esc="doc.name"/><br/>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>
